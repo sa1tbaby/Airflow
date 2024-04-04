@@ -1,0 +1,41 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+dist/
+build/
+
+# Airflow runtime state
+airflow.cfg
+airflow.db
+standalone_admin_password.txt
+simple_auth_manager_passwords.json.generated
+logs/*
+!logs/.gitkeep
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Kubernetes and Helm local output
+*.rendered.yaml
+charts/
+

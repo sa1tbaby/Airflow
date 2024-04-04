@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools==69.2.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airflow-template"
+version = "0.1.0"
+description = "Reusable building blocks and examples for an Apache Airflow deployment template."
+requires-python = ">=3.11,<3.12"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers -ra"
+markers = [
+    "integration: tests that require running Airflow services or external systems",
+]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["airflow_template"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-include = ["*.py.tmpl"]
+preview = true
+
+[tool.ruff.lint]
+select = ["AIR", "B", "E", "F", "I", "SIM", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+
