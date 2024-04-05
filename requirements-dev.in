@@ -1,0 +1,7 @@
+# Development-only dependencies. Install this lock together with requirements.txt.
+--constraint requirements.txt
+--constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.8.4/constraints-3.11.txt
+
+pytest
+pytest-cov
+ruff
