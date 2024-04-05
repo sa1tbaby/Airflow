@@ -1,0 +1,12 @@
+# Runtime dependencies. Compile with the Airflow 2.8.4 constraints for Python 3.11.
+--constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.8.4/constraints-3.11.txt
+
+apache-airflow==2.8.4
+apache-airflow-providers-celery
+apache-airflow-providers-cncf-kubernetes
+apache-airflow-providers-http
+apache-airflow-providers-postgres
+apache-airflow-providers-redis
+pip==24.0
+setuptools==69.2.0
+wheel==0.43.0
