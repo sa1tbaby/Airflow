@@ -1,0 +1,20 @@
+"""Reusable TaskGroup template."""
+
+from collections.abc import Sequence
+
+from airflow.decorators import task, task_group
+
+
+@task_group(group_id="transform")
+def build_transform_group(values):
+    """Return the terminal task so callers can compose dependencies naturally."""
+
+    @task
+    def normalize(value: int) -> int:
+        return max(value, 0)
+
+    @task
+    def summarize(normalized_values: Sequence[int]) -> int:
+        return sum(normalized_values)
+
+    return summarize(normalize.expand(value=values))

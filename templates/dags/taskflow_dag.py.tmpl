@@ -1,0 +1,39 @@
+"""Airflow DAG template: copy this file into dags/ and replace the REPLACE_* values."""
+
+import pendulum
+from airflow.decorators import dag, task
+from airflow_template.callbacks import log_task_failure
+from airflow_template.defaults import dag_default_args
+
+DEFAULT_ARGS = dag_default_args(owner="REPLACE_WITH_OWNER")
+
+
+@dag(
+    dag_id="REPLACE_WITH_DAG_ID",
+    description="REPLACE_WITH_DESCRIPTION",
+    schedule=None,
+    start_date=pendulum.datetime(2024, 1, 1, tz="UTC"),
+    catchup=False,
+    default_args=DEFAULT_ARGS,
+    tags=["REPLACE_WITH_TEAM", "REPLACE_WITH_DOMAIN"],
+    on_failure_callback=log_task_failure,
+)
+def replace_with_dag_name():
+    """Keep imports cheap and put external I/O inside tasks."""
+
+    @task(multiple_outputs=False)
+    def extract() -> dict[str, int]:
+        return {"value": 1}
+
+    @task
+    def transform(payload: dict[str, int]) -> int:
+        return payload["value"] * 2
+
+    @task
+    def load(value: int) -> None:
+        print(f"Load {value} into the destination")
+
+    load(transform(extract()))
+
+
+replace_with_dag_name_dag = replace_with_dag_name()
