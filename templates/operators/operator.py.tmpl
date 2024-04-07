@@ -1,0 +1,21 @@
+"""Custom operator template using Airflow 2's public operator API."""
+
+from typing import Any
+
+from airflow.models.baseoperator import BaseOperator
+from airflow.utils.context import Context
+
+
+class EchoOperator(BaseOperator):
+    """Render and log a message when the task executes."""
+
+    template_fields = ("message",)
+
+    def __init__(self, *, message: str, **kwargs: Any) -> None:
+        # Constructors run frequently in the Dag processor: never open connections here.
+        super().__init__(**kwargs)
+        self.message = message
+
+    def execute(self, context: Context) -> str:
+        self.log.info("%s", self.message)
+        return self.message

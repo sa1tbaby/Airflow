@@ -1,0 +1,21 @@
+"""Minimal Airflow plugin template.
+
+Custom operators and sensors do not need plugin registration. Use a plugin only for extension
+points such as macros, listeners, timetables, or UI integrations.
+"""
+
+import re
+
+from airflow.plugins_manager import AirflowPlugin
+
+
+def project_slug(value: str) -> str:
+    """Example macro exposed to Airflow templates."""
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+class ProjectPlugin(AirflowPlugin):
+    """Register project-level extensions with a unique plugin name."""
+
+    name = "project_plugin"
+    macros = [project_slug]
