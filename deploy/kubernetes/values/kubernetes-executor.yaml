@@ -1,0 +1,30 @@
+executor: KubernetesExecutor
+
+# KubernetesExecutor does not need a Celery broker.
+redis:
+  enabled: false
+
+flower:
+  enabled: false
+
+# The scheduler creates and watches task pods.
+allowPodLaunching: true
+scheduler:
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: true
+
+workers:
+  serviceAccount:
+    create: true
+    # Enable only for tasks that themselves call the Kubernetes API.
+    automountServiceAccountToken: false
+  safeToEvict: false
+  terminationGracePeriodSeconds: 600
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
