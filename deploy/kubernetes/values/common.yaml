@@ -1,0 +1,72 @@
+# Shared values for the official apache-airflow/airflow chart 1.13.1.
+# DAGs and runtime dependencies are baked into this immutable Python 3.11 image.
+airflowVersion: "2.8.4"
+defaultAirflowRepository: airflow-template
+defaultAirflowTag: "2.8.4-python3.11"
+useStandardNaming: true
+
+images:
+  airflow:
+    pullPolicy: IfNotPresent
+
+# A database or broker is enabled only by an explicit environment/executor layer.
+postgresql:
+  enabled: false
+redis:
+  enabled: false
+
+webserver:
+  enabled: true
+  defaultUser:
+    enabled: false
+  serviceAccount:
+    automountServiceAccountToken: false
+  service:
+    type: ClusterIP
+
+scheduler:
+  enabled: true
+  serviceAccount:
+    automountServiceAccountToken: false
+
+dagProcessor:
+  enabled: true
+  serviceAccount:
+    automountServiceAccountToken: false
+
+triggerer:
+  enabled: true
+  serviceAccount:
+    automountServiceAccountToken: false
+
+# No implicit admin/admin outside the explicit dev overlay.
+createUserJob:
+  serviceAccount:
+    automountServiceAccountToken: false
+
+migrateDatabaseJob:
+  serviceAccount:
+    automountServiceAccountToken: false
+
+# The image is the only DAG delivery mechanism in this template.
+dags:
+  persistence:
+    enabled: false
+  gitSync:
+    enabled: false
+
+# Logs are ephemeral here. Production must enable remote logging.
+logs:
+  persistence:
+    enabled: false
+
+config:
+  core:
+    load_examples: "False"
+  logging:
+    colored_console_log: "False"
+
+statsd:
+  enabled: true
+  serviceAccount:
+    automountServiceAccountToken: false
