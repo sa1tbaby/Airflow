@@ -1,0 +1,38 @@
+executor: CeleryExecutor
+
+# Dev uses the chart Redis. The production overlay disables it and uses the
+# pre-created broker Secret named below; dev.yaml clears this value.
+redis:
+  enabled: true
+
+data:
+  brokerUrlSecretName: airflow-broker-url
+
+flower:
+  enabled: false
+
+# Keep false unless Celery tasks use KubernetesPodOperator or KubernetesJobOperator.
+allowPodLaunching: false
+
+workers:
+  replicas: 1
+  persistence:
+    # Local logs are ephemeral; production uses remote task logging.
+    enabled: false
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
+  safeToEvict: false
+  terminationGracePeriodSeconds: 600
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  keda:
+    # Enable only after installing KEDA and validating the metadata query.
+    enabled: false
+    minReplicaCount: 0
+    maxReplicaCount: 10
