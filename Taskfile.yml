@@ -1,0 +1,98 @@
+version: "3"
+
+vars:
+  COMPOSE_BASE: -f deploy/docker/compose.yaml
+  COMPOSE_CELERY: -f deploy/docker/compose.yaml -f deploy/docker/compose.celery.yaml
+  HELM_CHART_VERSION: "1.13.1"
+
+tasks:
+  init:windows:
+    desc: Generate a local .env file on Windows
+    cmds:
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/init-env.ps1
+
+  init:unix:
+    desc: Generate a local .env file on Linux or macOS
+    cmds:
+      - sh scripts/init-env.sh
+
+  build:
+    desc: Build the shared Airflow runtime image
+    preconditions:
+      - sh: test -f .env
+        msg: Run the appropriate init task first or copy .env.example to .env.
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_BASE}} build
+
+  up:
+    desc: Start the compact LocalExecutor stack
+    preconditions:
+      - sh: test -f .env
+        msg: Run the appropriate init task first or copy .env.example to .env.
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_BASE}} up --build -d --wait
+
+  up:celery:
+    desc: Start the CeleryExecutor stack with Redis and a worker
+    preconditions:
+      - sh: test -f .env
+        msg: Run the appropriate init task first or copy .env.example to .env.
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_CELERY}} up --build -d --wait
+
+  down:
+    desc: Stop either Compose variant without deleting its data volume
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_CELERY}} down --remove-orphans
+
+  logs:
+    desc: Follow logs from all Airflow services
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_CELERY}} logs -f
+
+  test:
+    desc: Run lint and tests in the same image used by deployments
+    cmds:
+      - docker build --target test -t airflow-template:test .
+      - docker run --rm airflow-template:test
+
+  requirements:compile:
+    desc: Regenerate the runtime and development Python lock files
+    cmds:
+      - >-
+        uv pip compile --python-version 3.11.8
+        --python-platform x86_64-manylinux_2_17
+        --output-file requirements.txt requirements.in
+      - >-
+        uv pip compile --python-version 3.11.8
+        --python-platform x86_64-manylinux_2_17
+        --output-file requirements-dev.txt requirements-dev.in
+
+  compose:check:
+    desc: Validate both merged Compose configurations
+    cmds:
+      - docker compose --env-file .env {{.COMPOSE_BASE}} config --quiet
+      - docker compose --env-file .env {{.COMPOSE_CELERY}} config --quiet
+
+  helm:template:kubernetes:
+    desc: Render the KubernetesExecutor Helm release locally
+    cmds:
+      - >-
+        helm template airflow apache-airflow/airflow
+        --version {{.HELM_CHART_VERSION}}
+        --namespace airflow
+        -f deploy/kubernetes/values/common.yaml
+        -f deploy/kubernetes/values/kubernetes-executor.yaml
+        -f deploy/kubernetes/values/dev.yaml
+
+  helm:template:celery:
+    desc: Render the CeleryExecutor Helm release locally
+    cmds:
+      - >-
+        helm template airflow apache-airflow/airflow
+        --version {{.HELM_CHART_VERSION}}
+        --namespace airflow
+        -f deploy/kubernetes/values/common.yaml
+        -f deploy/kubernetes/values/celery-executor.yaml
+        -f deploy/kubernetes/values/dev.yaml
+
