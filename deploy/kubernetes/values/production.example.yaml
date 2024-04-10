@@ -1,0 +1,98 @@
+# EXAMPLE ONLY. Copy to a private deployment repository and replace every REPLACE_ME value.
+# Apply after common.yaml and exactly one executor overlay.
+
+defaultAirflowRepository: registry.example.com/REPLACE_ME/airflow-template
+defaultAirflowTag: "2.8.4-python3.11-REPLACE_ME_GIT_SHA"
+images:
+  airflow:
+    pullPolicy: IfNotPresent
+
+# Add a pre-created registry secret here when the image is private.
+imagePullSecrets: []
+# imagePullSecrets:
+#   - name: airflow-registry
+
+# Use a managed PostgreSQL service. The metadata secret contains key `connection`.
+postgresql:
+  enabled: false
+
+# KubernetesExecutor needs no broker. celery-executor.yaml selects the external broker Secret.
+redis:
+  enabled: false
+
+pgbouncer:
+  # Prefer a managed pooler, or configure chart PgBouncer and its required secrets explicitly.
+  enabled: false
+
+data:
+  metadataSecretName: airflow-metadata
+  # Airflow 2.8 derives the Celery SQL result backend from the metadata URL.
+  # celery-executor.yaml additionally selects the external broker Secret.
+
+fernetKeySecretName: airflow-fernet-key
+webserverSecretKeySecretName: airflow-webserver-secret
+
+# Example S3 remote task logging. Include apache-airflow-providers-amazon in the image and grant
+# access with workload identity, or replace these settings with the GCS/Azure equivalent.
+logs:
+  persistence:
+    enabled: false
+config:
+  logging:
+    remote_logging: "True"
+    remote_base_log_folder: s3://REPLACE_ME_AIRFLOW_LOG_BUCKET/airflow/task-logs
+    remote_log_conn_id: aws_default
+    delete_local_logs: "True"
+
+webserver:
+  defaultUser:
+    enabled: false
+  replicas: 2
+  podDisruptionBudget:
+    enabled: true
+    config:
+      maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+scheduler:
+  replicas: 2
+  podDisruptionBudget:
+    enabled: true
+    config:
+      maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+dagProcessor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+triggerer:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+statsd:
+  enabled: true
