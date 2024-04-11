@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-and-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AIRFLOW_VERSION: "2.8.4"
+      AIRFLOW_HOME: /tmp/airflow-template
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements.in
+            requirements.txt
+            requirements-dev.in
+            requirements-dev.txt
+
+      - name: Install locked dependencies
+        shell: bash
+        run: |
+          python -m pip install "pip==24.0"
+          python -m pip install --requirement requirements.txt
+          python -m pip install --requirement requirements-dev.txt
+          python -m pip check
+          python -c 'import airflow, os; assert airflow.__version__ == os.environ["AIRFLOW_VERSION"]'
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint Python
+        run: ruff check .
+
+      - name: Run unit and Dag integrity tests
+        run: pytest --cov=airflow_template --cov-report=term-missing
+
+  deployment-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare non-secret CI environment
+        run: cp .env.example .env
+
+      - name: Validate Compose variants
+        run: |
+          docker compose --env-file .env \
+            -f deploy/docker/compose.yaml \
+            config --quiet
+          docker compose --env-file .env \
+            -f deploy/docker/compose.yaml \
+            -f deploy/docker/compose.celery.yaml \
+            config --quiet
+
+      - name: Build and run the test image
+        run: |
+          docker build --target test --tag airflow-template:test .
+          docker run --rm airflow-template:test
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+
+      - name: Render both Kubernetes executors
+        shell: bash
+        run: |
+          helm repo add apache-airflow https://airflow.apache.org
+          helm repo update
+          for executor_values in kubernetes-executor celery-executor; do
+            helm template airflow apache-airflow/airflow \
+              --version 1.13.1 \
+              --namespace airflow \
+              -f deploy/kubernetes/values/common.yaml \
+              -f "deploy/kubernetes/values/${executor_values}.yaml" \
+              -f deploy/kubernetes/values/dev.yaml \
+              >/dev/null
+            helm template airflow apache-airflow/airflow \
+              --version 1.13.1 \
+              --namespace airflow \
+              -f deploy/kubernetes/values/common.yaml \
+              -f "deploy/kubernetes/values/${executor_values}.yaml" \
+              -f deploy/kubernetes/values/production.example.yaml \
+              >/dev/null
+          done
+
