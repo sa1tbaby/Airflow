@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   quality-and-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       AIRFLOW_VERSION: "2.8.4"
@@ -56,7 +56,7 @@ jobs:
         run: pytest --cov=airflow_template --cov-report=term-missing
 
   deployment-config:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     steps:
