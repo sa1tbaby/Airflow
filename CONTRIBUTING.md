@@ -2,14 +2,15 @@
 
 ## Development workflow
 
-1. Create a branch and never commit `.env`, keys, passwords, or connection URIs.
-2. Use the public Airflow 2.8 APIs: `airflow.decorators`, `airflow.datasets`, stable operator and
+1. Use Ubuntu 22.04 x86_64 as the development host.
+2. Create a branch and never commit `.env`, keys, passwords, or connection URIs.
+3. Use the public Airflow 2.8 APIs: `airflow.decorators`, `airflow.datasets`, stable operator and
    sensor modules, and documented models.
-3. Keep business logic in `src/airflow_template/` and use DAG files as a thin orchestration layer.
-4. Change direct dependencies in `requirements.in` or `requirements-dev.in`, then run
+4. Keep business logic in `src/airflow_template/` and use DAG files as a thin orchestration layer.
+5. Change direct dependencies in `requirements.in` or `requirements-dev.in`, then run
    `task requirements:compile`; never edit lock files manually.
-5. Add or update tests.
-6. Run `task test` and `task compose:check` before opening a pull request.
+6. Add or update tests.
+7. Run `task test` and `task compose:check` before opening a pull request.
 
 ## DAG conventions
 

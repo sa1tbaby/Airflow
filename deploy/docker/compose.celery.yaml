@@ -36,7 +36,7 @@ x-airflow-celery-common: &airflow-celery-common
 
 services:
   redis:
-    image: redis:7.2-alpine
+    image: redis:7.2.4-alpine
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data

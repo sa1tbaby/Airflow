@@ -5,8 +5,11 @@ is not copied into this repository. Versions are pinned to a compatible snapshot
 
 - Apache Airflow `2.8.4` with Python `3.11`;
 - official `apache-airflow/airflow` chart `1.13.1`;
-- Kubernetes `1.25+` and Helm `3.0+`, as required by chart 1.13.1. Airflow 2.8.4 itself was tested
-  with Kubernetes `1.25`–`1.28`.
+- Helm `3.14.3` in CI and Kubernetes `1.25`–`1.28`, the range tested by Airflow 2.8.4;
+- Redis `7.2.4`, PostgreSQL `16.1.0-debian-11-r15`, and StatsD exporter `v0.26.0` for the
+  chart-managed supporting services.
+
+Run the commands in this guide from the supported Ubuntu 22.04 x86_64 host.
 
 Chart 1.13.1 uses Airflow 2.8.3 by default, so `values/common.yaml` explicitly sets both
 `airflowVersion: 2.8.4` and the image tag. DAGs and Python dependencies are packaged in the
@@ -162,8 +165,8 @@ for `createUserJob` and `migrateDatabaseJob`, as required by the chart 1.13.1 do
 Generate values outside the repository:
 
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-python -c "import secrets; print(secrets.token_hex(16))"
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python3 -c "import secrets; print(secrets.token_hex(16))"
 ```
 
 External Secrets, Sealed Secrets, or SOPS is the preferred production approach. If you use a plain

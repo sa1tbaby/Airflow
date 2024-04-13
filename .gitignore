@@ -29,11 +29,9 @@ simple_auth_manager_passwords.json.generated
 logs/*
 !logs/.gitkeep
 
-# Editors and operating systems
+# Editors
 .idea/
 .vscode/
-.DS_Store
-Thumbs.db
 
 # Kubernetes and Helm local output
 *.rendered.yaml

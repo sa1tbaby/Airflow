@@ -1,9 +1,10 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7.0@sha256:dbbd5e059e8a07ff7ea6233b213b36aa516b4c53c645f1817a4dd18b83cbea56
 
 ARG AIRFLOW_VERSION=2.8.4
 ARG PYTHON_VERSION=3.11
+ARG AIRFLOW_BASE_IMAGE=apache/airflow:2.8.4-python3.11@sha256:ca3d5cd76493e3278788763fd29065e969dd6b896d3e51211678be95c262340f
 
-FROM apache/airflow:${AIRFLOW_VERSION}-python${PYTHON_VERSION} AS airflow-base
+FROM ${AIRFLOW_BASE_IMAGE} AS airflow-base
 
 ARG AIRFLOW_VERSION
 ARG PYTHON_VERSION

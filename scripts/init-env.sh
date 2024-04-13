@@ -10,7 +10,7 @@ if [ -f "$target_path" ] && [ "${1:-}" != "--force" ]; then
   exit 0
 fi
 
-python - "$project_root" <<'PY'
+python3 - "$project_root" <<'PY'
 from __future__ import annotations
 
 import base64

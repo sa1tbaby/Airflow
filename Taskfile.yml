@@ -3,16 +3,12 @@ version: "3"
 vars:
   COMPOSE_BASE: -f deploy/docker/compose.yaml
   COMPOSE_CELERY: -f deploy/docker/compose.yaml -f deploy/docker/compose.celery.yaml
+  DEPENDENCY_CUTOFF: "2024-04-05T23:59:59Z"
   HELM_CHART_VERSION: "1.13.1"
 
 tasks:
-  init:windows:
-    desc: Generate a local .env file on Windows
-    cmds:
-      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/init-env.ps1
-
-  init:unix:
-    desc: Generate a local .env file on Linux or macOS
+  init:
+    desc: Generate a local .env file on Ubuntu 22.04
     cmds:
       - sh scripts/init-env.sh
 
@@ -20,7 +16,7 @@ tasks:
     desc: Build the shared Airflow runtime image
     preconditions:
       - sh: test -f .env
-        msg: Run the appropriate init task first or copy .env.example to .env.
+        msg: Run task init first or copy .env.example to .env.
     cmds:
       - docker compose --env-file .env {{.COMPOSE_BASE}} build
 
@@ -28,7 +24,7 @@ tasks:
     desc: Start the compact LocalExecutor stack
     preconditions:
       - sh: test -f .env
-        msg: Run the appropriate init task first or copy .env.example to .env.
+        msg: Run task init first or copy .env.example to .env.
     cmds:
       - docker compose --env-file .env {{.COMPOSE_BASE}} up --build -d --wait
 
@@ -36,7 +32,7 @@ tasks:
     desc: Start the CeleryExecutor stack with Redis and a worker
     preconditions:
       - sh: test -f .env
-        msg: Run the appropriate init task first or copy .env.example to .env.
+        msg: Run task init first or copy .env.example to .env.
     cmds:
       - docker compose --env-file .env {{.COMPOSE_CELERY}} up --build -d --wait
 
@@ -62,10 +58,12 @@ tasks:
       - >-
         uv pip compile --python-version 3.11.8
         --python-platform x86_64-manylinux_2_17
+        --exclude-newer {{.DEPENDENCY_CUTOFF}}
         --output-file requirements.txt requirements.in
       - >-
         uv pip compile --python-version 3.11.8
         --python-platform x86_64-manylinux_2_17
+        --exclude-newer {{.DEPENDENCY_CUTOFF}}
         --output-file requirements-dev.txt requirements-dev.in
 
   compose:check:

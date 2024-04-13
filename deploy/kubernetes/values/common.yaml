@@ -8,6 +8,12 @@ useStandardNaming: true
 images:
   airflow:
     pullPolicy: IfNotPresent
+  redis:
+    repository: redis
+    tag: 7.2.4-bookworm
+  statsd:
+    repository: quay.io/prometheus/statsd-exporter
+    tag: v0.26.0
 
 # A database or broker is enabled only by an explicit environment/executor layer.
 postgresql:

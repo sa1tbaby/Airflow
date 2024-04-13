@@ -13,11 +13,17 @@ The template deliberately reproduces a stable stack from spring 2024:
 | Apache Airflow | `2.8.4` |
 | Python | `3.11.8` for local tooling, image family `3.11` |
 | Apache Airflow Helm chart | `1.13.1` |
-| PostgreSQL in Compose | `13` |
+| PostgreSQL in Compose | `13.14` |
+| Redis in Compose | `7.2.4` |
+| Supported host | Ubuntu `22.04` x86_64 |
 
 Airflow 2.8.4 and chart 1.13.1 were released on March 25, 2024. Python 3.11.8 was the latest 3.11
 release available on that date. `.python-version`, Docker build arguments, CI, Compose, and Helm
 values all use this baseline.
+
+All versions declared by this repository for Python packages, container applications, build
+frontends, GitHub Actions, and Helm are from releases available no later than April 5, 2024. Lock
+regeneration also applies that date as an explicit package-publication cutoff.
 
 ## Repository layout
 
@@ -37,18 +43,13 @@ docs/                         architecture, authoring guide, and runbook
 
 ## Docker quick start
 
-You need Docker with Compose v2, at least 4 GB of memory (8 GB recommended), and port 8080
-available.
+The supported host environment is Ubuntu 22.04 x86_64. You need Docker with Compose v2, Python 3,
+at least 4 GB of memory (8 GB recommended), and port 8080 available.
 
 Create a `.env` file with local secrets:
 
-```powershell
-# Windows PowerShell
-.\scripts\init-env.ps1
-```
-
 ```bash
-# Linux/macOS/WSL; Python 3 is used only to generate secrets
+# Ubuntu 22.04; Python 3 is used only to generate secrets
 sh scripts/init-env.sh
 ```
 
@@ -105,8 +106,8 @@ task requirements:compile
 ```
 
 Alternatively, run the two `uv pip compile` commands from `Taskfile.yml`. The result targets the
-Linux runtime image (`x86_64-manylinux_2_17`). After changing either input file, rebuild the image
-and run the tests.
+Linux runtime image (`x86_64-manylinux_2_17`) and excludes packages published after April 5, 2024.
+After changing either input file, rebuild the image and run the tests.
 
 ## Validation
 
