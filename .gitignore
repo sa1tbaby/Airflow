@@ -1,7 +1,8 @@
-# Local environment and secrets
-.env
-.env.*
-!.env.example
+# Local environment and generated service configuration
+/.env
+/.env.*
+!/.env.example
+/.generated/
 *.pem
 *.key
 secrets/

@@ -8,41 +8,49 @@ vars:
 
 tasks:
   init:
-    desc: Generate a local .env file on Ubuntu 22.04
+    desc: Read .env and render ignored service configuration on Ubuntu 22.04
     cmds:
       - sh scripts/init-env.sh
 
   build:
     desc: Build the shared Airflow runtime image
-    preconditions:
-      - sh: test -f .env
-        msg: Run task init first or copy .env.example to .env.
+    deps: [init]
     cmds:
       - docker compose --env-file .env {{.COMPOSE_BASE}} build
 
   up:
     desc: Start the compact LocalExecutor stack
-    preconditions:
-      - sh: test -f .env
-        msg: Run task init first or copy .env.example to .env.
+    deps: [init]
     cmds:
       - docker compose --env-file .env {{.COMPOSE_BASE}} up --build -d --wait
 
   up:celery:
     desc: Start the CeleryExecutor stack with Redis and a worker
-    preconditions:
-      - sh: test -f .env
-        msg: Run task init first or copy .env.example to .env.
+    deps: [init]
     cmds:
       - docker compose --env-file .env {{.COMPOSE_CELERY}} up --build -d --wait
 
   down:
     desc: Stop either Compose variant without deleting its data volume
+    preconditions:
+      - sh: >-
+          test -f .env
+          && test -f .generated/docker/airflow.env
+          && test -f .generated/docker/airflow-init.env
+          && test -f .generated/docker/postgres.env
+        msg: Run `task init` once before managing the Compose stack.
     cmds:
       - docker compose --env-file .env {{.COMPOSE_CELERY}} down --remove-orphans
 
   logs:
     desc: Follow logs from all Airflow services
+    preconditions:
+      - sh: >-
+          test -f .env
+          && test -f .generated/docker/airflow.env
+          && test -f .generated/docker/airflow-init.env
+          && test -f .generated/docker/postgres.env
+        msg: Run `task init` once before managing the Compose stack.
     cmds:
       - docker compose --env-file .env {{.COMPOSE_CELERY}} logs -f
 
@@ -68,6 +76,7 @@ tasks:
 
   compose:check:
     desc: Validate both merged Compose configurations
+    deps: [init]
     cmds:
       - docker compose --env-file .env {{.COMPOSE_BASE}} config --quiet
       - docker compose --env-file .env {{.COMPOSE_CELERY}} config --quiet

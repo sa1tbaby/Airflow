@@ -50,6 +50,16 @@ files and are not installed in the runtime stage.
 
 ## Secrets and state
 
-`.env` is for local use only. In Kubernetes, the metadata DB URI, Fernet key, webserver secret,
-broker credentials, and Connections come from existing Secrets or an external secrets manager.
-PostgreSQL data, remote task logs, and backups are not part of the application image.
+The ignored root `.env` is the local source of truth. `scripts/init-env.sh` parses it without shell
+evaluation and renders least-scope service files under the ignored `.generated/` directory:
+
+- Docker Airflow runtime secrets;
+- Docker initialization credentials;
+- Docker PostgreSQL credentials;
+- optionally, a Kubernetes Secret manifest based on tracked common and Celery broker templates.
+
+Compose uses the root `.env` only for interpolation such as image names, UID, ports, and flags;
+containers receive secrets through their generated service-specific env files. In Kubernetes, the
+metadata DB URI, Fernet key, webserver secret, and broker URL come from pre-created Secrets or an
+external secret manager. The broker Secret is omitted for KubernetesExecutor. PostgreSQL data,
+remote task logs, and backups are not part of the image.

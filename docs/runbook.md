@@ -24,12 +24,18 @@ Never downgrade the metadata DB without a documented recovery plan.
 
 ## Rotating secrets
 
+- Update the relevant value in the ignored root `.env`, run `task init`, apply the regenerated
+  Kubernetes Secret when applicable, and restart or roll out the affected services.
 - Webserver secret key: update it consistently across all webserver replicas; active UI sessions
   will become invalid.
 - Fernet key: prepend the new key to the old key, run `airflow rotate-fernet-key`, verify the
-  result, and then remove the old key.
+  result, and then remove the old key. Use `NEW_KEY,OLD_KEY` without spaces while both keys are
+  active; the environment renderer validates every key in the list.
 - DB/broker credentials: enable the new credentials on the server first, update the Secret and
   pods, verify the change, and then revoke the old credentials.
+
+Do not replace a value with `GENERATE_ME` unless an intentional rotation is planned. The renderer
+generates markers once and preserves every explicit value on later runs.
 
 ## Backup and recovery
 

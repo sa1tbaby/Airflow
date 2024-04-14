@@ -3,7 +3,7 @@
 ## Development workflow
 
 1. Use Ubuntu 22.04 x86_64 as the development host.
-2. Create a branch and never commit `.env`, keys, passwords, or connection URIs.
+2. Create a branch and never commit `.env`, `.generated/`, keys, passwords, or connection URIs.
 3. Use the public Airflow 2.8 APIs: `airflow.decorators`, `airflow.datasets`, stable operator and
    sensor modules, and documented models.
 4. Keep business logic in `src/airflow_template/` and use DAG files as a thin orchestration layer.

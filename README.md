@@ -46,12 +46,18 @@ docs/                         architecture, authoring guide, and runbook
 The supported host environment is Ubuntu 22.04 x86_64. You need Docker with Compose v2, Python 3,
 at least 4 GB of memory (8 GB recommended), and port 8080 available.
 
-Create a `.env` file with local secrets:
+Initialize the root environment source and render service-specific files:
 
 ```bash
-# Ubuntu 22.04; Python 3 is used only to generate secrets
+# Creates .env when missing, then renders .generated/docker/*.env
 sh scripts/init-env.sh
 ```
+
+The first run copies the sectioned `.env.example` to the ignored `.env`, replaces `AUTO` and
+`GENERATE_ME` markers, and writes service files with mode `0600`. Later runs read the existing
+`.env` without rotating explicit values and refresh the generated files. Edit `.env`, then rerun
+the command whenever configuration changes. The script parses a non-executable dotenv subset; it
+does not `source` the file or evaluate shell expressions.
 
 Start the compact `LocalExecutor` stack:
 
@@ -162,7 +168,7 @@ For details, see the [DAG authoring guide](docs/dag-authoring.md),
 - Publish the image using an immutable tag or digest; never install packages when a pod starts.
 - Use external PostgreSQL, a Celery broker, a secrets manager, and remote task logging.
 - Define realistic resource requests/limits, probes, autoscaling, network policies, and backups.
-- Never use `.env`, development credentials, or the example Kubernetes Secret in production.
+- Never commit `.env`, `.generated/`, development credentials, or a populated Secret manifest.
 - Validate metadata database migrations and rollback procedures in staging.
 - Alert on scheduler heartbeats, task failures, and Celery queue depth.
 

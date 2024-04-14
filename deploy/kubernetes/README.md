@@ -105,10 +105,13 @@ kubectl port-forward -n airflow svc/airflow-webserver 8080:8080
 
 1. Copy `values/production.example.yaml` into a private deployment repository and replace every
    `REPLACE_ME` value.
-2. Create the namespace and secrets before `helm upgrade`. `examples/secrets.example.yaml` contains
-   deliberately invalid placeholders: metadata/Fernet/webserver secrets are required by both
-   executors, while the broker secret is required only by CeleryExecutor.
-3. Render the manifests, review the diff, and only then perform the upgrade.
+2. Fill the Kubernetes block in the ignored root `.env`, enable rendering, and run
+   `sh scripts/init-env.sh`. The tracked templates in `examples/` produce the ignored
+   `.generated/kubernetes/secrets.yaml` file.
+3. Create the namespace and apply the generated Secrets before `helm upgrade`. Metadata, Fernet,
+   and webserver secrets are required by both executors; the broker secret is used by
+   CeleryExecutor.
+4. Render the manifests, review the diff, and only then perform the upgrade.
 
 Airflow 2.8.4 does not require a separate Celery result-backend Secret: the chart and Airflow derive
 the database-backed result backend from the metadata connection. If a separate backend is needed,
@@ -119,6 +122,7 @@ Example Celery production release:
 
 ```bash
 kubectl create namespace airflow --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f .generated/kubernetes/secrets.yaml
 
 helm template airflow apache-airflow/airflow \
   --version 1.13.1 \
@@ -162,16 +166,35 @@ for `createUserJob` and `migrateDatabaseJob`, as required by the chart 1.13.1 do
 
 ## Generating secrets
 
-Generate values outside the repository:
+The root `.env` is the ignored source of truth. Configure this section:
 
-```bash
-python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-python3 -c "import secrets; print(secrets.token_hex(16))"
+```dotenv
+K8S_SECRETS_ENABLED=true
+K8S_NAMESPACE=airflow
+K8S_METADATA_CONNECTION=postgresql+psycopg2://USER:PASSWORD@HOST:5432/airflow?sslmode=require
+K8S_BROKER_SECRET_ENABLED=false
+K8S_BROKER_URL=rediss://USER:PASSWORD@HOST:6379/0
+K8S_FERNET_KEY=GENERATE_ME
+K8S_WEBSERVER_SECRET_KEY=GENERATE_ME
 ```
 
-External Secrets, Sealed Secrets, or SOPS is the preferred production approach. If you use a plain
-Secret manifest, populate a temporary copy of `examples/secrets.example.yaml`, apply it, and then
-securely delete the local copy.
+Leave `K8S_BROKER_SECRET_ENABLED=false` for KubernetesExecutor. For CeleryExecutor, set it to
+`true` and replace `K8S_BROKER_URL`; the renderer then appends the optional broker template to the
+same generated manifest. Percent-encode reserved characters in URI usernames and passwords—for
+example, use `%23` for `#`, `%40` for `@`, and `%2F` for `/`.
+
+Then render and apply it:
+
+```bash
+sh scripts/init-env.sh
+kubectl apply -f .generated/kubernetes/secrets.yaml
+```
+
+The renderer never executes `.env` as shell code, JSON-quotes all YAML values, rejects symlinked
+secret paths, writes atomically, and sets mode `0600`. The generated YAML still contains plaintext
+secrets. Git ignore and file permissions prevent common accidents but do not replace Kubernetes
+encryption at rest. External Secrets, Sealed Secrets, SOPS, or a managed secret store remains
+preferable for production.
 
 Official references:
 

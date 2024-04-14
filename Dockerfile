@@ -48,6 +48,9 @@ RUN python -m pip install --no-cache-dir \
 
 COPY --chown=airflow:root tests/ /opt/airflow/tests/
 COPY --chown=airflow:root templates/ /opt/airflow/templates/
+COPY --chown=airflow:root scripts/ /opt/airflow/scripts/
+COPY --chown=airflow:root deploy/ /opt/airflow/deploy/
+COPY --chown=airflow:root .env.example /opt/airflow/.env.example
 
 CMD ["bash", "-c", "ruff check . && ruff format --check . && pytest -q /opt/airflow/tests"]
 
